@@ -2,19 +2,20 @@
 name = "shepherd-fast"
 version = "0.1.0"
 description = "An implementation of shepherd using fastapi"
-authors = ["fenjalien"]
+authors = ["fenjalien <34489450+fenjalien@users.noreply.github.com>"]
+packages = [{ include = "app" }]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-fastapi = "^0.61.2"
+python = "^3.9"
+fastapi = "^0.62.0"
+aiofiles = "^0.6.0"
+uvicorn = "^0.12.3"
+typer = "^0.3.2"
 
 [tool.poetry.dev-dependencies]
-uvicorn = "^0.12.3"
 black = "^20.8b1"
 pylint = "^2.6.0"
-
-[tool.poetry.scripts]
-local = "uvicorn main:app --reload"
+pretty-errors = "^1.2.19"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
