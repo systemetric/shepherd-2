@@ -15,3 +15,41 @@ Reasons against the re-write:
  3. All of the problems can be solved with a refactor
 
 I (Edwin) think that a prototype re-write should at least be tried to see how hard it is mainly for 2, 5 and 6.
+
+## Getting started
+
+Dependencies are managed using poetry which you can get
+[here](https://python-poetry.org/docs/master/#installing-with-the-official-installer)
+
+```
+poetry install
+```
+
+This will create a virtual environment where the dependencies will be installed
+this means that they will only be available for shepherd and will not interfere
+with the rest of your system.
+
+You can enter this virtual environment by:
+
+```
+poetry shell
+```
+
+and/or you can run shepherd by:
+
+```
+sh run.sh
+```
+
+## Documentation
+
+Documentation is available for this project here: TODO
+
+## Tools
+
+This project uses autopep8 to format everything. If you are in the virtual env
+you can run:
+
+```
+autopep8 app/* -i
+```
