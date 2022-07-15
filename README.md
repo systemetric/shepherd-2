@@ -1,6 +1,6 @@
 # shepherd-2
 
-A rewrite of shepherd using python 3.9 and FastAPI.
+A rewrite of shepherd using python 3.10 and FastAPI.
 
 Reasons for a re-write:
  1. 1.0 was designed to serve webpages we now use shepherd as an API. This fundemental different use means that large sections of the code are now obsolete and there is clutter and assumptions based on how things used to be
