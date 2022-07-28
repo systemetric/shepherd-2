@@ -25,6 +25,13 @@ pytest = "^7.1.2"
 testpaths = ["./test/"]
 filterwarnings = ["ignore: There is no current event loop"]
 
+[tool.mypy]
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["uvicorn.*", "pretty_errors.*"]
+ignore_missing_imports = "True"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
