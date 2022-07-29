@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "shepherd-fast"
+name = "shepherd-2"
 version = "0.1.0"
 description = "An implementation of shepherd using fastapi"
 authors = ["fenjalien <34489450+fenjalien@users.noreply.github.com>", "Edwin Shepherd"]
