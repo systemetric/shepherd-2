@@ -39,21 +39,16 @@ You can enter this virtual environment by:
 poetry shell
 ```
 
-and/or you can run shepherd by:
-
+Start the server in development mode (hot reload)
 ```
-sh run.sh
+dev = "poetry run uvicorn app:app --reload"
+```
+
+Run tests
+```
+pytest -x
 ```
 
 ## Documentation
 
 Documentation is available for this project here: TODO
-
-## Tools
-
-This project uses autopep8 to format everything. If you are in the virtual env
-you can run:
-
-```
-autopep8 app/* -i
-```

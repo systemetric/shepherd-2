@@ -11,7 +11,8 @@ app = FastAPI(
     redoc_url="/api_redoc",
 )
 
-app.include_router(routers.router)
+app.include_router(routers.runner_router)
+app.include_router(routers.upload_router)
 
 @app.get("/")
 def root():
@@ -23,6 +24,7 @@ def shutdown_event():
     Might not work if we crash or die
     """
     runner.stop()
+
 
 if __name__ == '__main__':
     uvicorn.run(app, port=8080, host='0.0.0.0')

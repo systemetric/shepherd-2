@@ -1,16 +1,25 @@
-from fastapi import APIRouter, HTTPException
+import shutil
+
+from fastapi import APIRouter, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
 from app.runner import States
 from app.runner import runner
+import app.upload
 
-router = APIRouter()
+# ==============================================================================
+# Runner router
+# ==============================================================================
 
-@router.get("/stop")
+runner_router = APIRouter()
+
+
+@runner_router.get("/stop")
 def stop():
     runner.state = States.STOPPED
 
-@router.get("/start")
+
+@runner_router.get("/start")
 def start():
     if runner.state != States.READY:
         raise HTTPException(status_code=409,
@@ -18,10 +27,29 @@ def start():
                             + ". Need to be in States.READY")
     runner.state = States.RUNNING
 
-@router.get("/state")
+
+@runner_router.get("/state")
 def get_state():
     return runner.current_state
 
-@router.get("/logs")
-async def output():
+
+@runner_router.get("/logs")
+def output():
     return StreamingResponse(runner.get_output(), media_type="text/plain")
+
+# ==============================================================================
+# Upload router
+# ==============================================================================
+
+
+upload_router = APIRouter()
+
+
+@upload_router.post("/upload")
+def upload_file(file: UploadFile):
+    app.upload.process_uploaded_file(file)
+    return {
+        "filename": file.filename,
+        "filesize": len(file)
+    }
+

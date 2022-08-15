@@ -4,6 +4,7 @@ import io
 import subprocess as sp
 import threading
 import sys
+import time
 from enum import Enum
 
 from app.config import config
@@ -38,11 +39,12 @@ class Runner:
         self.new_state_event = threading.Event()
         self.new_state_event.set()
         self.runner = threading.Thread(target=self._state_machine, daemon=True)
+        self.watchdog = threading.Thread(target=self._run_watchdog, daemon=True)
         self.runner.start()
 
     def _enter_ready_state(self) -> None:
         self.user_sp = sp.Popen(
-            [sys.executable, "-u", config.usercode_entry_point],
+            [sys.executable, "-u", config.usercode_entry_path],
             stdout=self.output_file,
             stderr=sp.STDOUT,
             universal_newlines=True,
@@ -50,8 +52,8 @@ class Runner:
         )
 
     def _enter_running_state(self) -> None:
-        """Send start button press to usercode"""
-        pass
+        """Send start signal to usercode"""
+        pass # TODO:
 
     def _enter_stopped_state(self) -> None:
         """Reap the users code"""
@@ -59,6 +61,7 @@ class Runner:
             return
         return_code = self.user_sp.poll()
         if return_code is None:
+            # User code is still running so we need to kill it
             try:
                 try:
                     self.user_sp.terminate()
@@ -66,14 +69,15 @@ class Runner:
                 except sp.TimeoutExpired:
                     self.user_sp.kill()
             except OSError as e:
-                if e.errno != errno.ESRCH:  # No such process, already died
+                # Died between us seeing its alive and killing it
+                if e.errno != errno.ESRCH:
                     raise e
         elif return_code != 0:
             print(f"Usercode exited with {return_code} but was not killed by shepherd")
 
     def _state_machine(self) -> None:
         """The lifecycle of the usercode
-        Don't need a try/finlay as @shutdown handles forcing into STOPPED state
+        Don't need a try/finally as main.shutdown handles forcing into STOPPED state
         """
         state_timeout = None
 
@@ -81,7 +85,8 @@ class Runner:
             self.new_state_event.wait(timeout=state_timeout)
             with self.state_transition_lock:
                 self.new_state_event.clear()
-                print(f"Moving state from {self.current_state} to {self.next_state}")
+                print(
+                    f"Moving state from {self.current_state} to {self.next_state}")
                 self.current_state = self.next_state
                 match self.next_state:
                     case States.READY:
@@ -104,12 +109,30 @@ class Runner:
 
     @state.setter
     def state(self, next_state: States) -> None:
+        """Moves into a new state
+        Waits for the other thread to acquire the lock so is guaranteed to cause
+        a transition.
+        """
         with self.state_transition_lock:
             self.next_state = next_state
             self.new_state_event.set()
+        while self.new_state_event.is_set():  # Only cleared in the state_machine thread
+            time.sleep(0.05)                  # Don't use 100% CPU
 
     def get_output(self) -> io.TextIOWrapper:
         return open(config.output_file_path, "rt", 1)
 
+    def _run_watchdog(self) -> None:
+        """Watches the usercode to check when it exits so we can move to STOPPED
+        Runs in a separate thread.
+        """
+        while True:
+            time.sleep(0.25)
+            if self.current_state == States.RUNNING:  # Don't acquire lock unless we might need it
+                with self.state_transition_lock:
+                    if (self.current_state == States.RUNNING) and (self.user_sp.poll() is not None):
+                        print("Detected usercode has exited")
+                        self.next_state = States.STOPPED
+                        self.new_state_event.set()
 
 runner = Runner()
