@@ -24,12 +24,7 @@ jobs:
       - name: Remove commented out code
         run: eradicate --in-place ./**/*.py
       - name: Push back to repo
-        uses: actions-go/push@v1
-        with:
-          author-email: github-actions[bot]@users.noreply.github.com
-          author-name: Reformat action
-          create-commit: true
-          commit-message: "Reformatted code and removed commented-out code"
+        uses: anyone-developer/anyone-push-back-repo@1.1.2
   lint:
     runs-on: ubuntu-latest
     needs: reformat
