@@ -1,9 +1,9 @@
 """Process an uploaded file"""
-from argparse import FileType
 import contextlib
 import shutil
 import tempfile
 import fastapi
+import types
 import zipfile
 from pathlib import Path
 
@@ -16,15 +16,59 @@ def _is_python(file: fastapi.UploadFile) -> bool:
 
 
 def _is_zip(file: fastapi.UploadFile) -> bool:
-    return (("zip" in file.mimetype or file.filename.endswith(".zip")
-             ) and zipfile.is_zipfile(file))
+    return (("zip" in file.content_type) or file.filename.endswith(".zip"))
 
 
-def _stage_python_file(dir: tempfile.TemporaryDirectory, in_file):
+def _stage_python(dir: tempfile.TemporaryDirectory, in_file: fastapi.UploadFile):
     entry_point = Path(dir.name) / config.usercode_entry_point
     with open(entry_point, 'wb') as out_file:
         content = in_file.file.read()
         out_file.write(content)
+
+def _fix_bad_spools(spooled_file: fastapi.UploadFile):
+    """Due to a python bug not all of the interfaces are compatible.
+    The `fastapi.UploadFile` type inherits from `SpooledTemporaryFile` a builtin
+    which does not specify the abstract for `IOBase`. There is some work to fix
+    this:
+    https://bugs.python.org/issue26175
+    A fix for this has been merged in into the 3.11 rc so hopefully this will be
+    fixed soon:
+    https://github.com/python/cpython/commit/78e70be3318bc2ca57dac188061ed35017a0867c
+
+    For now we reach in to the object to try and patch it ourselves.
+    This will not work for files larger than `UploadFile._max_size` as the
+    attributes change:
+    https://stackoverflow.com/a/47169185/5006710
+
+    We make sure that the object has a large enough size in
+    main.increase_max_file_size
+    """
+    def readable(self):
+        return self._file.readable
+
+    def writable(self):
+        return self._file.writable
+
+    def seekable(self):
+        return self._file.seekable
+
+    spooled_file.file.seekable = types.MethodType(seekable, spooled_file.file)
+    spooled_file.file.readable = types.MethodType(readable, spooled_file.file)
+    spooled_file.file.writable = types.MethodType(writable, spooled_file.file)
+
+
+def _stage_zip(dir: tempfile.TemporaryDirectory, in_file: fastapi.UploadFile):
+    _fix_bad_spools(in_file)
+
+    try:
+        with zipfile.ZipFile(in_file.file, "r") as zip:
+            zip.extractall(dir.name)
+    except shutil.ReadError as e:
+        raise e
+
+    entry_path = (Path(dir.name) / config.usercode_entry_point)
+    if not entry_path.exists():
+        raise TypeError(f"Unable to find {config.usercode_entry_point} in zip")
 
 
 @contextlib.contextmanager
@@ -35,11 +79,11 @@ def _stage_usecode(file: fastapi.UploadFile):
     try:
         tempdir = tempfile.TemporaryDirectory()
         if _is_python(file):
-            _stage_python_file(tempdir, file)
+            _stage_python(tempdir, file)
         elif _is_zip(file):
-            pass  # TODO: zips
+            _stage_zip(tempdir, file)
         else:
-            raise FileType("Unknown File type, upload .zip or .py")
+            raise FileType("Unknown File type, upload `.zip` or `.py`")
 
         yield tempdir
     finally:
@@ -48,7 +92,6 @@ def _stage_usecode(file: fastapi.UploadFile):
 
 def process_uploaded_file(file: fastapi.UploadFile):
     """Does the mime type and linter all return good?"""
-    print("processing uploaded file")
     with _stage_usecode(file) as staging_dir:
         runner.state = States.STOPPED
         shutil.rmtree(config.usercode_path)

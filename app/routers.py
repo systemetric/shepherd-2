@@ -1,5 +1,3 @@
-import shutil
-
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 

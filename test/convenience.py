@@ -1,5 +1,6 @@
 """A set of functions to make writing the tests a bit easier"""
 import time
+import pprint
 
 from fastapi.testclient import TestClient
 
@@ -14,11 +15,13 @@ def wait_until(expr, interval=0.1, timeout=5):
 
 
 def start_python(client: TestClient, python_file: str):
-    files = {"file": open(python_file, "rb")}
-    res = client.post("/upload", files=files)
-    assert res.status_code == 201
+    files = {"archive": ("robot.zip", open(python_file, "rb"))}
+    response = client.post("/upload", files=files)
+    pprint.pprint(response.content)
+    print(python_file)
+    assert response.status_code == 201
     time.sleep(1)  # TODO: https://github.com/systemetric/shepherd-2/issues/18
-    res = client.get("/start")
+    response = client.get("/start")
 
 
 def run_python(client: TestClient, python_file: str):
