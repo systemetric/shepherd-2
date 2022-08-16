@@ -8,6 +8,7 @@ STATE_TRANS_TIMEOUT = 5
 client = TestClient(app)
 
 @pytest.mark.timeout(STATE_TRANS_TIMEOUT)
+@pytest.mark.xfail(reason="Ready state not implemented, https://github.com/systemetric/shepherd-2/issues/18")
 def test_inital_state():
     """The server is ready to run code within STATE_TRANS_TIMEOUT seconds of starting"""
     while (response := client.get("/state")).json() != "Ready":

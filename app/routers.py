@@ -1,6 +1,6 @@
 import shutil
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 
 from app.runner import States
@@ -21,21 +21,24 @@ def stop():
 
 @runner_router.get("/start")
 def start():
-    if runner.state != States.READY:
+    """Start the robot, really the check and the start should be in a lock"""
+    # TODO: https://github.com/systemetric/shepherd-2/issues/18
+    if runner.state != States.INIT:
         raise HTTPException(status_code=409,
                             detail=f"Cannot start robot in state {runner.state}"
-                            + ". Need to be in States.READY")
-    runner.state = States.RUNNING
+                            + ". Need to be in States.INIT")
+    # runner.state = States.RUNNING
+    type(runner).state.__set__(runner, States.RUNNING)
 
 
 @runner_router.get("/state")
 def get_state():
-    return runner.current_state
+    return runner.state
 
 
 @runner_router.get("/logs")
 def output():
-    return StreamingResponse(runner.get_output(), media_type="text/plain")
+    return runner.get_output()
 
 # ==============================================================================
 # Upload router
@@ -44,12 +47,11 @@ def output():
 
 upload_router = APIRouter()
 
-
-@upload_router.post("/upload")
-def upload_file(file: UploadFile):
+@upload_router.post("/upload", status_code=201)
+def upload_file(file: UploadFile = File(...)):
+    print("file upload triggered")
     app.upload.process_uploaded_file(file)
     return {
         "filename": file.filename,
-        "filesize": len(file)
     }
 

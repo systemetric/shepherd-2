@@ -23,7 +23,7 @@ def shutdown_event():
     """Make sure that we kill any running usercode
     Might not work if we crash or die
     """
-    runner.stop()
+    runner.shutdown()
 
 
 if __name__ == '__main__':
