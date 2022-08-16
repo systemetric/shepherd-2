@@ -25,6 +25,7 @@ def _stage_python(dir: tempfile.TemporaryDirectory, in_file: fastapi.UploadFile)
         content = in_file.file.read()
         out_file.write(content)
 
+
 def _fix_bad_spools(spooled_file: fastapi.UploadFile):
     """Due to a python bug not all of the interfaces are compatible.
     The `fastapi.UploadFile` type inherits from `SpooledTemporaryFile` a builtin
@@ -43,6 +44,7 @@ def _fix_bad_spools(spooled_file: fastapi.UploadFile):
     We make sure that the object has a large enough size in
     main.increase_max_file_size
     """
+
     def readable(self):
         return self._file.readable
 

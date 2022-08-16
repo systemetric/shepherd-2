@@ -15,7 +15,7 @@ def wait_until(expr, interval=0.1, timeout=5):
 
 
 def start_python(client: TestClient, python_file: str):
-    files = {"archive": ("robot.zip", open(python_file, "rb"))}
+    files = {"file": (python_file, open(python_file, "rb"))}
     response = client.post("/upload", files=files)
     pprint.pprint(response.content)
     print(python_file)

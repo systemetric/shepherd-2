@@ -26,4 +26,4 @@ def test_zip_upload():
         )
         print(Path("test/stimulus/example_zip").absolute())
         result = run_python(client, archive_name + ".zip")
-    raise Exception(result)
+    assert(result == "zip files work\n")
