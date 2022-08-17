@@ -20,7 +20,7 @@ def _is_zip(file: fastapi.UploadFile) -> bool:
 
 
 def _stage_python(dir: tempfile.TemporaryDirectory, in_file: fastapi.UploadFile):
-    entry_point = Path(dir.name) / config.usercode_entry_point
+    entry_point = Path(dir.name) / config.round_entry_point
     with open(entry_point, 'wb') as out_file:
         content = in_file.file.read()
         out_file.write(content)
@@ -80,9 +80,9 @@ def _stage_zip(dir: tempfile.TemporaryDirectory, in_file: fastapi.UploadFile):
     except shutil.ReadError as e:
         raise e
 
-    entry_path = (Path(dir.name) / config.usercode_entry_point)
+    entry_path = (Path(dir.name) / config.round_entry_point)
     if not entry_path.exists():
-        raise TypeError(f"Unable to find {config.usercode_entry_point} in zip")
+        raise TypeError(f"Unable to find {config.round_entry_point} in zip")
 
 
 @contextlib.contextmanager
@@ -107,6 +107,6 @@ def process_uploaded_file(file: fastapi.UploadFile):
     """Does the mime type and linter all return good?"""
     with _stage_usecode(file) as staging_dir:
         runner.state = States.STOPPED
-        shutil.rmtree(config.usercode_path)
-        shutil.move(staging_dir.name, config.usercode_path)
+        shutil.rmtree(config.round_path)
+        shutil.move(staging_dir.name, config.round_path)
         runner.state = States.INIT

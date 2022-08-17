@@ -6,9 +6,9 @@ from pathlib import Path
 class Settings:
 
     output_file_path: Path = Path("logs.txt").absolute()
-    usercode_path: Path = Path("usercode/").absolute()
-    usercode_entry_point = Path("main.py")
-    usercode_entry_path: Path = (usercode_path / usercode_entry_point).absolute()
+    round_path: Path = Path("usercode/round").absolute()
+    round_entry_point = Path("main.py")
+    round_entry_path: Path = (round_path / round_entry_point).absolute()
 
     editor_path: Path = Path("static/editor/").absolute()
     docs_path: Path = Path("static/docs/").absolute()
