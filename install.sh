@@ -1,9 +1,12 @@
 echo "Running shepherd-2 installer"
+set -e
+set -o pipefail
 
 if ! command -v poetry
 then
     echo "Poetry could not be found running installer"
     curl -sSL https://install.python-poetry.org | python3 -
+    export PATH="~/.local/bin:$PATH"
     if ! command -v poetry
     then
         echo "Poetry install failed please follow steps at: "
