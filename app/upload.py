@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 from app.config import config
-from app.runner import runner, States
+from app.run import runner, States
 
 
 def _is_python(file: fastapi.UploadFile) -> bool:
@@ -44,7 +44,6 @@ def _fix_bad_spools(spooled_file: fastapi.UploadFile):
     We make sure that the object has a large enough size in
     main.increase_max_file_size
     """
-
     def readable(self):
         return self._file.readable
 
@@ -57,6 +56,19 @@ def _fix_bad_spools(spooled_file: fastapi.UploadFile):
     spooled_file.file.seekable = types.MethodType(seekable, spooled_file.file)
     spooled_file.file.readable = types.MethodType(readable, spooled_file.file)
     spooled_file.file.writable = types.MethodType(writable, spooled_file.file)
+
+
+def increase_max_file_size():
+    """This is the maximum filesize which can be uploaded to shepherd.
+    see app.upload._fix_bad_zips for more info.
+
+    starlette which FastAPI uses does not allow for us to set the spool_max_size
+    in the constructor instead defining it as a class attribute so we override
+    this class attribute
+    """
+    from starlette.datastructures import UploadFile as StarletteUploadFile
+    # the original size * a big number which we will never hit
+    StarletteUploadFile.spool_max_size = (1024 * 1024) * 99999999999999999
 
 
 def _stage_zip(dir: tempfile.TemporaryDirectory, in_file: fastapi.UploadFile):
@@ -86,7 +98,6 @@ def _stage_usecode(file: fastapi.UploadFile):
             _stage_zip(tempdir, file)
         else:
             raise FileType("Unknown File type, upload `.zip` or `.py`")
-
         yield tempdir
     finally:
         tempdir.cleanup()

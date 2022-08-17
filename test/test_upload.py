@@ -24,6 +24,19 @@ def test_zip_upload():
             "zip",
             Path("test/stimulus/example_zip").absolute()
         )
-        print(Path("test/stimulus/example_zip").absolute())
         result = run_python(client, archive_name + ".zip")
     assert(result == "zip files work\n")
+
+
+def test_large_zip_upload():
+    """upload a zip file which is larger than any usercode should be"""
+    import stimulus.large_zip.main as large_pi
+    with tempfile.TemporaryDirectory() as dir:
+        archive_name = dir + "/robot"
+        shutil.make_archive(
+            archive_name,
+            "zip",
+            Path("test/stimulus/large_zip").absolute()
+        )
+        result = run_python(client, archive_name + ".zip")
+    assert(result == "{}\n".format(large_pi.pi))
