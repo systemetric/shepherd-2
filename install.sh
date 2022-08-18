@@ -1,12 +1,15 @@
+# Install poetry
+# Use poetry to install and setup a virtual env for shepherd
+# Create a script for running poetry
+
 echo "Running shepherd-2 installer"
-set -e
-set -o pipefail
 
 if ! command -v poetry
 then
-    echo "Poetry could not be found running installer"
-    curl -sSL https://install.python-poetry.org | python3 -
+    echo "Poetry not found. Downloading and installing."
+    curl -sSL https://install.python-poetry.org | python3 - || exit
     export PATH="~/.local/bin:$PATH"
+    echo "WARNING: Ensure that '~/.local/bin:$PATH' is added to the path"
     if ! command -v poetry
     then
         echo "Poetry install failed please follow steps at: "
@@ -14,13 +17,20 @@ then
     fi
 fi
 
-echo "installing python dependancies using poetry"
-poetry install
-
 # Can be used with --debug for hot reload
 touch run.sh
 echo "poetry run uvicorn app:app" > run.sh
 
-echo "========================================"
-echo "INSTALL COMPLETE: Use 'sh run.sh' to run"
-echo "========================================"
+echo "installing python dependancies using poetry"
+if poetry install; then
+    echo "========================================"
+    echo "INSTALL COMPLETE: Use 'sh run.sh' to run"
+    echo "========================================"
+else
+    echo "-------------------------------------------------------------------------------------"
+    echo "FAILED: Poetry failed to install dependancies. Maybe there is no good python version."
+    echo "Download and build python from here: https://docs.python.org/3/using/unix.html"
+    echo "-------------------------------------------------------------------------------------"
+    exit
+fi
+

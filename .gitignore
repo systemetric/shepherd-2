@@ -145,5 +145,4 @@ cython_debug/
 ##################################################################
 
 usercode/round/*
-usercode/editor/*
 logs.txt

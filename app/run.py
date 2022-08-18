@@ -11,6 +11,8 @@ from enum import Enum
 from app.config import config
 
 
+logger = logging.getLogger(__name__)
+
 class States(Enum):
     INIT = "Init"
     RUNNING = "Running"
@@ -81,7 +83,7 @@ class Runner:
                 if e.errno != errno.ESRCH:
                     raise e
         elif return_code != 0:
-            logging.info(
+            logger.info(
                 f"Usercode exited with {return_code} but was not killed by shepherd")
         self.output_file.close()
 
@@ -95,7 +97,7 @@ class Runner:
             self.new_state_event.wait(timeout=state_timeout)
             with self.state_transition_lock:
                 self.new_state_event.clear()
-                logging.info(
+                logger.info(
                     f"Moving state from {self._current_state} to {self._next_state}")
                 self._current_state = self._next_state
                 match self._next_state:
@@ -142,7 +144,7 @@ class Runner:
             if self._current_state == States.RUNNING:  # Don't acquire lock unless we might need it
                 with self.state_transition_lock:
                     if (self._current_state == States.RUNNING) and (self.user_sp.poll() is not None):
-                        logging.info("WATCHDOG: Detected usercode has exited")
+                        logger.info("WATCHDOG: Detected usercode has exited")
                         self._next_state = States.STOPPED
                         self.new_state_event.set()
 

@@ -1,9 +1,8 @@
-import logging
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-from app.routers import runner_router, upload_router
+from app.routers import runner_router, upload_router, files_router
 from app.run import runner
 from app.config import config
 from app.upload import increase_max_file_size
@@ -18,6 +17,7 @@ app = FastAPI(
 
 app.include_router(runner_router)
 app.include_router(upload_router)
+app.include_router(files_router)
 
 app.mount("/editor", StaticFiles(directory=config.editor_path, html=True), name="editor")
 app.mount("/docs", StaticFiles(directory=config.docs_path, html=True), name="docs")
