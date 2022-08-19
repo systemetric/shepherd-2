@@ -25,7 +25,7 @@ class Settings:
     teamname_file: Path = Path('/home/pi/teamname.txt')
 
     def __init__(self):
-        self._init_usr_src()
+        self._init_usercode()
 
     def _get_team_specifics(self):
         """Find infomation set on each brain about the team"""
@@ -60,7 +60,7 @@ class Settings:
             static_graphic = Path('shepherd/static/image.jpg')
             static_graphic.write_bytes(start_graphic.read_bytes())
 
-    def _init_usr_src(self):
+    def _init_usercode(self):
         """Ensure that the saved usercode has a main.py and blocks.json"""
         self.usr_src_path = Path("usercode/editable").absolute()
         if not self.usr_src_path.exists():
@@ -70,6 +70,9 @@ class Settings:
         with open(self.usr_src_main_path, 'w') as main_file:
             main_file.write('# DO NOT DELETE\n')
         self.blocks_path = self.usr_src_path / Path('blocks.json')
+
+        if self.round_path.exists() is False:
+            os.mkdir(self.round_path)
 
 
 config = Settings()

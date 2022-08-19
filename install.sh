@@ -73,7 +73,10 @@ cd Python-3.10.6
 ./configure --enable-optimizations --with-ensurepip=install
 make -j4
 sudo make altinstall
-cd ..you
+cd ..
+
+rm Python-3.10.6.tgz
+sudo rm Python-3.10.6 -rf
 
 # Try to install the project dependencies again
 if poetry install; then
