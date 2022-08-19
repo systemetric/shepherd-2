@@ -22,6 +22,24 @@ Additionally there are a whole load of features which a new shepherd could suppo
 
 ## Getting started
 
+## Use the script
+
+Automatically install everything and set up the virtual env:
+
+```
+sh install.sh
+```
+
+If the script fails because you do not have a new enough python version you can
+follow the steps here:
+ - Guide: https://realpython.com/installing-python/#how-to-build-python-from-source-code
+ - Offical python docs: https://docs.python.org/3/using/unix.html
+
+If building on a pi you will need to increase your swap space. 2GB has been
+tested to work on a pi 3A+.
+
+## Manual install
+
 Dependencies are managed using poetry which you can get
 [here](https://python-poetry.org/docs/master/#installing-with-the-official-installer)
 
@@ -39,16 +57,23 @@ You can enter this virtual environment by:
 poetry shell
 ```
 
-Start the server in development mode (hot reload)
+## Running shepherd
+
+Start the server in development mode (hot reload):
 ```
-dev = "poetry run uvicorn app:app --reload"
+poetry run uvicorn app:app --reload
 ```
 
-Run tests
+To deploy run (chosen port and ip are optional):
+```
+poetry run uvicorn app:app --host 0.0.0.0 --port 80
+```
+
+## Tests
+
+Tests are located in `test/`
+
+Run all tests and stop on the first fail:
 ```
 pytest -x
 ```
-
-## Documentation
-
-Documentation is available for this project here: TODO

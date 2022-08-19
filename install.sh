@@ -29,7 +29,9 @@ if poetry install; then
 else
     echo "-------------------------------------------------------------------------------------"
     echo "FAILED: Poetry failed to install dependancies. Maybe there is no good python version."
-    echo "Download and build python from here: https://docs.python.org/3/using/unix.html"
+    echo "Download and build python:"
+    echo "  - Guide: https://realpython.com/installing-python/#how-to-build-python-from-source-code"
+    echo "  - Offical python docs: https://docs.python.org/3/using/unix.html"
     echo "-------------------------------------------------------------------------------------"
     exit
 fi
