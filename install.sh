@@ -59,6 +59,8 @@ fi
 
 # Taken from https://rnealpython.com/installing-python/#how-to-build-python-from-source-code
 echo "We need sudo to install packages with apt to build python with"
+sudo apt update -y
+sudo apt upgrade -y
 sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
        libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
        libncurses5-dev libncursesw5-dev xz-utils tk-dev
