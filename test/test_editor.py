@@ -4,10 +4,11 @@ import os.path as path
 
 from pathlib import Path
 from pprint import pprint
+from typing import final
 from fastapi.testclient import TestClient
 
 from app import app
-
+from app.config import config
 
 client = TestClient(app)
 
@@ -42,3 +43,19 @@ def test_files():
         with open(expected_file_name) as expected_file:
             expected_file_contents = expected_file.read()
             assert(expected_file_contents == project["content"])
+
+
+def test_create_and_delete():
+    """Check that the editor can save and receive files"""
+    stimulus_name = "stimulus.py"
+    stimulus_contents = "print('hello this is the stimulus program!')"
+    stimulus_path = config.usr_src_path / Path(stimulus_name)
+    try:
+        client.post(f"/files/save/{stimulus_name}", data=stimulus_contents)
+        with open(stimulus_path) as stimulus:
+            assert(stimulus_contents == stimulus.read())
+        client.delete(f"/files/delete/{stimulus_name}")
+        assert(stimulus_path.exists() is False)
+    finally:
+        if stimulus_path.exists():
+            os.remove(stimulus_path)

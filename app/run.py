@@ -1,6 +1,8 @@
 """A wrapper on subprocess to control the state of the robot"""
 import errno
 import io
+import os
+import signal
 import subprocess as sp
 import threading
 import logging
@@ -52,6 +54,9 @@ class Runner:
         Open output file, in read/write with line buffering of 1,
         clearing previous contents
         """
+        # Can't just truncate the file it is possible that we don't close the
+        # file which can leave it in a mess to be truncated.
+        os.remove(config.output_file_path)
         self.output_file = open(config.output_file_path, "w+", 1)
         self.user_sp = sp.Popen(
             [sys.executable, "-u", config.round_entry_path],
@@ -59,6 +64,7 @@ class Runner:
             stderr=sp.STDOUT,
             universal_newlines=True,
             env=config.robot_env,
+            preexec_fn=os.setsid
         )
 
     def _enter_running_state(self) -> None:
@@ -74,10 +80,10 @@ class Runner:
             # User code is still running so we need to kill it
             try:
                 try:
-                    self.user_sp.terminate()
+                    os.killpg(os.getpgid(self.user_sp.pid), signal.SIGTERM)
                     self.user_sp.wait(timeout=config.reap_grace_time)
                 except sp.TimeoutExpired:
-                    self.user_sp.kill()
+                    os.killpg(os.getpgid(self.user_sp.pid), signal.SIGKILL)
             except OSError as e:
                 # Died between us seeing its alive and killing it
                 if e.errno != errno.ESRCH:
@@ -86,6 +92,7 @@ class Runner:
             logger.info(
                 f"Usercode exited with {return_code} but was not killed by shepherd")
         self.output_file.close()
+        assert(type(self.user_sp.poll()) == int)
 
     def _state_machine(self) -> None:
         """The lifecycle of the usercode
@@ -133,7 +140,9 @@ class Runner:
 
     def get_output(self):
         """Open the output file in reading text mode, line buffered"""
-        return open(config.output_file_path, "rt", 1).read()
+        if config.output_file_path.exists():
+            return open(config.output_file_path, "rt", 1).read()
+        return ""
 
     def _run_watchdog(self) -> None:
         """Watches the usercode to check when it exits so we can move to STOPPED
