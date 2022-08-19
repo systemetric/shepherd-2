@@ -145,4 +145,8 @@ cython_debug/
 ##################################################################
 
 usercode/round/*
+usercode/editable/*
+!usercode/editable/main.py
+!usercode/editable/minimal_example.py
+!usercode/editable/snippests.py
 logs.txt

@@ -56,7 +56,8 @@ class Runner:
         """
         # Can't just truncate the file it is possible that we don't close the
         # file which can leave it in a mess to be truncated.
-        os.remove(config.output_file_path)
+        if config.output_file_path.exists():
+            os.remove(config.output_file_path)
         self.output_file = open(config.output_file_path, "w+", 1)
         self.user_sp = sp.Popen(
             [sys.executable, "-u", config.round_entry_path],
