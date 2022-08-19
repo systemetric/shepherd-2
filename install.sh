@@ -1,6 +1,4 @@
-# Install poetry
-# Use poetry to install and setup a virtual env for shepherd
-# Create a script for running poetry
+# Installs everything which is needed to get up and running with shepherd
 
 echo "Running shepherd-2 installer"
 
@@ -37,8 +35,9 @@ echo "You can manually do that here:"
 echo "  - Guide: https://realpython.com/installing-python/#how-to-build-python-from-source-code"
 echo "  - Offical python docs: https://docs.python.org/3/using/unix.html"
 echo "-------------------------------------------------------------------------------------"
-echo "SOLUTION: install.sh is able to install python3.10 do you want to try [y/n] "
+echo "SOLUTION: install.sh is able to compile python3.10 from source do you want to try?"
 echo "-------------------------------------------------------------------------------------"
+echo " [y/n] "
 old_stty_cfg=$(stty -g)
 stty raw -echo
 answer=$( while ! head -c 1 | grep -i '[ny]' ;do true ;done )
@@ -57,23 +56,30 @@ if echo "$answer" | grep -iq "^n" ;then
     exit
 fi
 
-# Taken from https://rnealpython.com/installing-python/#how-to-build-python-from-source-code
-echo "We need sudo to install packages with apt to build python with"
+# Install dependencies
+echo "Trying to install build tools using apt..."
 sudo apt update -y
 sudo apt upgrade -y
 sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
        libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
        libncurses5-dev libncursesw5-dev xz-utils tk-dev
+
+# Get latest python tarball
 wget https://www.python.org/ftp/python/3.10.6/Python-3.10.6.tgz
 tar xvf Python-3.10.6.tgz
 cd Python-3.10.6
+
+# Configure and compile
 ./configure --enable-optimizations --with-ensurepip=install
 make -j4
 sudo make altinstall
-cd ..
+cd ..you
 
+# Try to install the project dependencies again
 if poetry install; then
     echo "========================================"
+    echo "Make sure to add poetry to your path    "
+    echo "PATH=$PATH:~/.local/bin"
     echo "INSTALL COMPLETE: Use 'sh run.sh' to run"
     echo "========================================"
     exit
