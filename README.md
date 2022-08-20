@@ -30,8 +30,8 @@ Automatically install everything and set up the virtual env:
 sh install.sh
 ```
 
-If the script fails because you do not have a new enough python version you can
-follow the steps here:
+The script is able to build python3.10 if you do not have it, alternatively you
+can follow the instructions here:
  - Guide: https://realpython.com/installing-python/#how-to-build-python-from-source-code
  - Offical python docs: https://docs.python.org/3/using/unix.html
 
@@ -73,7 +73,7 @@ poetry run uvicorn app:app --host 0.0.0.0 --port 80
 
 Tests are located in `test/`
 
-Run all tests and stop on the first fail:
+Run all tests and stop on the first fail with a verbose output:
 ```
-pytest -x
+pytest -xv
 ```
