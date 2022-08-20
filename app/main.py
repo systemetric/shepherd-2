@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
+import os
 
 from app.routers import runner_router, upload_router, files_router
 from app.run import runner
@@ -32,6 +33,7 @@ def startup_event():
 def shutdown_event():
     """Kill any running usercode"""
     runner.shutdown()
+    os.remove(config.usr_fifo_path)
 
 
 @app.get("/")

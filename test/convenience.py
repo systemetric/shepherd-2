@@ -1,5 +1,4 @@
 """A set of functions to make writing the tests a bit easier"""
-from pprint import pprint
 import time
 
 from fastapi.testclient import TestClient

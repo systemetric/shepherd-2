@@ -1,11 +1,15 @@
+import logging
 import os
 
 from pathlib import Path
+import tempfile
+
+_logger = logging.getLogger(__name__)
 
 
 class Settings:
 
-    output_file_path: Path = Path("logs.txt").absolute()
+    log_file_path: Path = Path("logs.txt")
     round_path: Path = Path("usercode/round").absolute()
     round_entry_point = Path("main.py")
     round_entry_path: Path = (round_path / round_entry_point).absolute()
@@ -15,52 +19,39 @@ class Settings:
 
     round_len: float = 180.0  # seconds
     reap_grace_time: float = 5.0  # seconds
-    arenaUSB_path: Path = Path("/media/ArenaUSB")
+    arena_usb_path: Path = Path("/media/ArenaUSB")
 
-    robot_path: Path = Path("/home/pi/robot").absolute()
+    robot_path: Path = Path("/home/pi/robot")
     robot_env: dict = dict(os.environ)
     on_brain: bool = False
 
-    game_control_path: Path = Path('/media/ArenaUSB')
-    teamname_file: Path = Path('/home/pi/teamname.txt')
+    robot_usb_path: Path = Path("/media/RobotUSB")
+    teamname_file: Path = Path("/home/pi/teamname.txt")
+    zone: bool = False
+
+    # tempfile.mktemp is deprecated, but there's no possibility of a race --
+    usr_fifo_path = tempfile.mktemp(prefix="shepherd-fifo-")
 
     def __init__(self):
-        self._init_usercode()
+        self._on_brain()
+        self._init_usercode_folder()
+        self._zone_from_USB()
 
-    def _get_team_specifics(self):
-        """Find infomation set on each brain about the team"""
-        # Teamname should be set on a per brain basis before shipping
-        # Its purpose is to allow the setting of specific graphics for help identifing teams in the arena.
-        # Graphics are loaded from the ArenaUSB stick if available, or standard graphics from the stick are used.
-        # this used to be in rc.local, but the looks of shame and dissapointment
-        # got the better of me
+        # os.mkfifo raises if its path already exists.
+        os.mkfifo(self.usr_fifo_path)
 
-        if teamname_file.exists():
-            teamname_jpg = teamname_file.read_text().replace('\n', '') + '.jpg'
-        else:
-            teamname_jpg = 'none'
+    def _on_brain(self):
+        """Detects if we are on a brain and alters the config accordingly
+        Looks to see if the robot_usb path exists, if it does then we are
+        probably on a configured brain rather than a dev PC
+        """
+        if self.robot_usb_path.exists():
+            _logger.warn("Detected RobotUSB path assuming on brain")
+            self.log_file_path = self.robot_usb_path / self.log_file_path
+            config.robot_env["PYTHONPATH"] = config.robot_path
+            self._get_team_specifics()
 
-        # Pick a start imapge in order of preference :
-        #     1) We have a team corner image on the USB
-        #     2) The team have uploaded their own image to the robot
-        #     3) We have a generic corner image on the USB
-        #     4) The game image
-        start_graphic = game_control_path / teamname_jpg
-        if not start_graphic.exists():
-            # attempt to find the team specific corner graphic from the ArenaUSB
-            start_graphic = Path('robotsrc/team_logo.jpg')
-        if not start_graphic.exists():
-            # attempt to find the default corner graphic from ArenaUSB
-            start_graphic = game_control_path / 'Corner.jpg'
-        if not start_graphic.exists():
-            # finally look for a game specific logo
-            start_graphic = Path('/home/pi/game_logo.jpg')
-
-        if config.start_graphic.exists():
-            static_graphic = Path('shepherd/static/image.jpg')
-            static_graphic.write_bytes(start_graphic.read_bytes())
-
-    def _init_usercode(self):
+    def _init_usercode_folder(self):
         """Ensure that the saved usercode has a main.py and blocks.json"""
         self.usr_src_path = Path("usercode/editable").absolute()
         if not self.usr_src_path.exists():
@@ -74,8 +65,43 @@ class Settings:
         if self.round_path.exists() is False:
             os.mkdir(self.round_path)
 
+    def _zone_from_USB(self):
+        """Set the zone based on the ARENAUSB, defaulting to zone 0"""
+        self.zone = "0"
+        for i in range(1, 4):
+            if (self.arena_usb_path / f"zone{i}.txt").exists():
+                self.zone = str(i)
+                return
+
+    def _get_team_specifics(self):
+        """Find information set on each brain about the team
+
+        Only makes sense to run this if we are on a brain
+        Teamname is set per brain before shipping and allows unique graphics
+        for ID'ing teams in the arena.
+
+        Pick a start image in order of preference :
+            1) We have a team corner image on the USB
+            2) The team have uploaded their own image to the robot
+            3) We have a generic corner image on the USB
+            4) The game image
+        """
+        if self.teamname_file.exists():
+            teamname_jpg = self.teamname_file.read_text().replace('\n', '') + '.jpg'
+        else:
+            teamname_jpg = 'none'
+
+        start_graphic = self.arena_usb_path / teamname_jpg
+        if not start_graphic.exists():
+            start_graphic = Path('usercode/editable/team_logo.jpg')
+        if not start_graphic.exists():
+            start_graphic = self.arena_usb_path / 'Corner.jpg'
+        if not start_graphic.exists():
+            start_graphic = Path('/home/pi/game_logo.jpg')
+
+        if config.start_graphic.exists():
+            static_graphic = Path('shepherd/static/image.jpg')
+            static_graphic.write_bytes(start_graphic.read_bytes())
+
 
 config = Settings()
-
-if config.on_brain is True:
-    config.robot_env["PYTHONPATH"] = config.robot_path
