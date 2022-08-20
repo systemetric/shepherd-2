@@ -78,6 +78,15 @@ cd ..
 rm Python-3.10.6.tgz
 sudo rm Python-3.10.6 -rf
 
+echo "python install complete"
+echo "Fixing potenitally broken virtual env..."
+
+# Fix the maybe broken virtual env: https://stackoverflow.com/a/63117674/5006710
+poetry env remove python3.10
+poetry env use python3.10
+
+echo "Installing python dependancies using poetry"
+
 # Try to install the project dependencies again
 if poetry install; then
     echo "========================================"
