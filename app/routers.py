@@ -29,8 +29,7 @@ def start():
         raise HTTPException(status_code=409,
                             detail=f"Cannot start robot in state {runner.state}"
                             + ". Need to be in States.INIT")
-    # runner.state = States.RUNNING
-    type(runner).state.__set__(runner, States.RUNNING)
+    runner.state = States.RUNNING
 
 
 @runner_router.get("/state")
