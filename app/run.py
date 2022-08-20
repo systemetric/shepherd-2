@@ -1,6 +1,7 @@
 """A wrapper on subprocess to control the state of the robot"""
 import errno
 import io
+import json
 import os
 import signal
 import subprocess as sp
@@ -13,7 +14,8 @@ from enum import Enum
 from app.config import config
 
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
+
 
 class States(Enum):
     INIT = "Init"
@@ -56,11 +58,12 @@ class Runner:
         """
         # Can't just truncate the file it is possible that we don't close the
         # file which can leave it in a mess to be truncated.
-        if config.output_file_path.exists():
-            os.remove(config.output_file_path)
-        self.output_file = open(config.output_file_path, "w+", 1)
+        if config.log_file_path.exists():
+            os.remove(config.log_file_path)
+        self.output_file = open(config.log_file_path, "w+", 1)
         self.user_sp = sp.Popen(
-            [sys.executable, "-u", config.round_entry_path],
+            [sys.executable, "-u", config.round_entry_path,
+             "--startfifo", config.usr_fifo_path],
             stdout=self.output_file,
             stderr=sp.STDOUT,
             universal_newlines=True,
@@ -70,7 +73,13 @@ class Runner:
 
     def _enter_running_state(self) -> None:
         """Send start signal to usercode"""
-        pass  # TODO:
+        start_settings = {
+                "mode": "comp",
+                "zone": int(config.zone),
+                "arena": "A",
+            }
+        with os.open(config.usr_fifo_path, os.O_WRONLY ) as usr_fifo:
+            json.dump(start_settings, usr_fifo)
 
     def _enter_stopped_state(self) -> None:
         """Reap the users code"""
@@ -90,22 +99,20 @@ class Runner:
                 if e.errno != errno.ESRCH:
                     raise e
         elif return_code != 0:
-            logger.info(
-                f"Usercode exited with {return_code} but was not killed by shepherd")
+            _logger.debug(
+                f"Usercode exited with {return_code} but was not killed by Shepherd")
         self.output_file.close()
-        assert(type(self.user_sp.poll()) == int)
 
     def _state_machine(self) -> None:
         """The lifecycle of the usercode
         Don't need a try/finally as main.shutdown handles forcing into STOPPED state
         """
         state_timeout = None
-
         while True:
             self.new_state_event.wait(timeout=state_timeout)
             with self.state_transition_lock:
                 self.new_state_event.clear()
-                logger.info(
+                _logger.debug(
                     f"Moving state from {self._current_state} to {self._next_state}")
                 self._current_state = self._next_state
                 match self._next_state:
@@ -141,8 +148,8 @@ class Runner:
 
     def get_output(self):
         """Open the output file in reading text mode, line buffered"""
-        if config.output_file_path.exists():
-            return open(config.output_file_path, "rt", 1).read()
+        if config.log_file_path.exists():
+            return open(config.log_file_path, "rt", 1).read()
         return ""
 
     def _run_watchdog(self) -> None:
@@ -154,7 +161,7 @@ class Runner:
             if self._current_state == States.RUNNING:  # Don't acquire lock unless we might need it
                 with self.state_transition_lock:
                     if (self._current_state == States.RUNNING) and (self.user_sp.poll() is not None):
-                        logger.info("WATCHDOG: Detected usercode has exited")
+                        _logger.info("WATCHDOG: Detected usercode has exited")
                         self._next_state = States.STOPPED
                         self.new_state_event.set()
 
