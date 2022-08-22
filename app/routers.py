@@ -1,13 +1,13 @@
 import logging
 from fastapi import APIRouter, HTTPException, UploadFile, File, Request
 from pydantic import BaseModel
+import logging
 
 from app.run import States
 from app.run import runner
 import app.editor
 import app.upload
 
-_logger = logging.getLogger(__name__)
 
 # ==============================================================================
 # Runner router
@@ -50,7 +50,7 @@ upload_router = APIRouter(prefix="/upload")
 
 @upload_router.post("/upload", status_code=201)
 def upload_file(uploaded_file: UploadFile = File(...)):
-    _logger.info("File uploaded to staging")
+    logging.info("File uploaded to staging")
     app.upload.process_uploaded_file(uploaded_file)
     return {
         "filename": uploaded_file.filename,

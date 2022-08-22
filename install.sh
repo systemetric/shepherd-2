@@ -34,6 +34,7 @@ echo "Poetry failed to install dependancies. Maybe there is no good python versi
 echo "You can manually do that here:"
 echo "  - Guide: https://realpython.com/installing-python/#how-to-build-python-from-source-code"
 echo "  - Offical python docs: https://docs.python.org/3/using/unix.html"
+echo "Alternatively you can use pyenv"
 echo "-------------------------------------------------------------------------------------"
 echo "SOLUTION: install.sh is able to compile python3.10 from source do you want to try?"
 echo "-------------------------------------------------------------------------------------"

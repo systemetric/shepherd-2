@@ -2,6 +2,8 @@ import time
 from fastapi.testclient import TestClient
 import pytest
 
+import logging
+
 from app import app
 
 from convenience import start_python, wait_until
@@ -34,10 +36,14 @@ def test_kill_user_code():
     Runs a while True loop printing out `running` then ensures that once the
     code is stopped that the output does not continue to grow.
     """
+    logging.info("Uploading and running while_true.py")
     start_python(client, "test/stimulus/while_true.py")
     client.post("/run/stop")
     wait_until(lambda: (client.get("/run/state").json() == "Stopped"))
+    logging.info("Stopped user code")
     log1 = client.get("/run/logs").json()
+    logging.info("Got logs 1")
     time.sleep(1)
     log2 = client.get("/run/logs").json()
+    logging.info("Got logs 2")
     assert(log1 == log2)

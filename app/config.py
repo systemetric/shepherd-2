@@ -1,10 +1,8 @@
-import logging
 import os
 
+import logging
 from pathlib import Path
 import tempfile
-
-_logger = logging.getLogger(__name__)
 
 
 class Settings:
@@ -46,7 +44,7 @@ class Settings:
         probably on a configured brain rather than a dev PC
         """
         if self.robot_usb_path.exists():
-            _logger.warn("Detected RobotUSB path assuming on brain")
+            logging.warning("Detected RobotUSB path assuming on brain")
             self.log_file_path = self.robot_usb_path / self.log_file_path
             config.robot_env["PYTHONPATH"] = config.robot_path
             self._get_team_specifics()
@@ -91,17 +89,17 @@ class Settings:
         else:
             teamname_jpg = 'none'
 
-        start_graphic = self.arena_usb_path / teamname_jpg
-        if not start_graphic.exists():
-            start_graphic = Path('usercode/editable/team_logo.jpg')
-        if not start_graphic.exists():
-            start_graphic = self.arena_usb_path / 'Corner.jpg'
-        if not start_graphic.exists():
-            start_graphic = Path('/home/pi/game_logo.jpg')
+        start_img_path = self.arena_usb_path / teamname_jpg
+        if not start_img_path.exists():
+            start_img_path = Path('usercode/editable/team_logo.jpg')
+        if not start_img_path.exists():
+            start_img_path = self.arena_usb_path / 'Corner.jpg'
+        if not start_img_path.exists():
+            start_img_path = Path('/home/pi/game_logo.jpg')
 
-        if config.start_graphic.exists():
-            static_graphic = Path('shepherd/static/image.jpg')
-            static_graphic.write_bytes(start_graphic.read_bytes())
+        if start_img_path.exists():
+            displayed_img_path = Path('shepherd/static/image.jpg')
+            displayed_img_path.write_bytes(start_img_path.read_bytes())
 
 
 config = Settings()
