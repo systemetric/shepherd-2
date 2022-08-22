@@ -6,11 +6,13 @@ import json
 import re
 from pathlib import Path
 
-
-_logger = logging.getLogger(__name__)
-
+import logging
 
 def get_files() -> dict:
+    """This read the editable files from the file system and returns them as json
+    The blockly blocks are saved in a `blocks.json` and are converted into a
+    standardized dictionary.
+    """
     project_paths = [f for f in os.listdir(config.usr_src_path)
                      if os.path.isfile(os.path.join(config.usr_src_path, f))
                      and (f.endswith('.py') or f.endswith(".xml") or f == "blocks.json")
@@ -49,21 +51,23 @@ def get_files() -> dict:
 
 
 def save_file(filename, body):
+    """Write a file with `filename` and `body` to the filesystem"""
     dots = len(re.findall("\\.", filename))
     if dots == 1:
         with open(os.path.join(config.usr_src_path, filename), 'w') as f:
             f.write(body.decode('utf-8'))
     else:
-        _logger.warn("A file was attempted to be saved with too many dots: "
+        logging.warning("A file was attempted to be saved with too many dots: "
                      f"{filename}")
 
 
 def delete_file(filename):
+    """Remove a file with `filename`"""
     if filename == "blocks.json":
         return ""
     dots = len(re.findall("\\.", filename))
     if dots == 1:
         os.unlink(os.path.join(config.usr_src_path, filename))
     else:
-        _logger.warn("A file was attempted to be saved with too many dots: "
+        logging.warning("A file was attempted to be saved with too many dots: "
                      f"{filename}")

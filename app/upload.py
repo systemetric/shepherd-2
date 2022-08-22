@@ -64,7 +64,9 @@ def increase_max_file_size():
 
     starlette which FastAPI uses does not allow for us to set the spool_max_size
     in the constructor instead defining it as a class attribute so we override
-    this class attribute
+    this class attribute.
+
+    We need to do this because of the bug in python see in _fix_bad_spools
     """
     from starlette.datastructures import UploadFile as StarletteUploadFile
     # the original size * a big number which we will never hit

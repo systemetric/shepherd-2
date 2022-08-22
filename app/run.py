@@ -6,15 +6,13 @@ import os
 import signal
 import subprocess as sp
 import threading
-import logging
 import sys
 import time
 from enum import Enum
 
+import logging
+
 from app.config import config
-
-
-_logger = logging.getLogger(__name__)
 
 
 class States(Enum):
@@ -70,6 +68,7 @@ class Runner:
             env=config.robot_env,
             preexec_fn=os.setsid
         )
+        logging.info(f"Started usercode PID:{os.getpgid(self.user_sp.pid)}")
 
     def _enter_running_state(self) -> None:
         """Send start signal to usercode"""
@@ -78,8 +77,12 @@ class Runner:
                 "zone": int(config.zone),
                 "arena": "A",
             }
-        with os.open(config.usr_fifo_path, os.O_WRONLY ) as usr_fifo:
-            json.dump(start_settings, usr_fifo)
+        # This is the old way of locking shepherd up until user code is ready
+        # to run however we should have a ready state so that we can't get here
+        # unless the usercode is ready to run
+        # TODO: https://github.com/systemetric/shepherd-2/issues/13
+        # with os.open(config.usr_fifo_path, os.O_WRONLY ) as usr_fifo:
+        #     json.dump(start_settings, usr_fifo)
 
     def _enter_stopped_state(self) -> None:
         """Reap the users code"""
@@ -98,8 +101,9 @@ class Runner:
                 # Died between us seeing its alive and killing it
                 if e.errno != errno.ESRCH:
                     raise e
+            logging.info("Killed usercode")
         elif return_code != 0:
-            _logger.debug(
+            logging.debug(
                 f"Usercode exited with {return_code} but was not killed by Shepherd")
         self.output_file.close()
 
@@ -112,7 +116,7 @@ class Runner:
             self.new_state_event.wait(timeout=state_timeout)
             with self.state_transition_lock:
                 self.new_state_event.clear()
-                _logger.debug(
+                logging.info(
                     f"Moving state from {self._current_state} to {self._next_state}")
                 self._current_state = self._next_state
                 match self._next_state:
@@ -148,6 +152,8 @@ class Runner:
 
     def get_output(self):
         """Open the output file in reading text mode, line buffered"""
+        if not self.output_file.closed:
+            self.output_file.flush()
         if config.log_file_path.exists():
             return open(config.log_file_path, "rt", 1).read()
         return ""
@@ -161,7 +167,7 @@ class Runner:
             if self._current_state == States.RUNNING:  # Don't acquire lock unless we might need it
                 with self.state_transition_lock:
                     if (self._current_state == States.RUNNING) and (self.user_sp.poll() is not None):
-                        _logger.info("WATCHDOG: Detected usercode has exited")
+                        logging.info("WATCHDOG: Detected usercode has exited")
                         self._next_state = States.STOPPED
                         self.new_state_event.set()
 
