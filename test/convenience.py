@@ -1,8 +1,15 @@
 """A set of functions to make writing the tests a bit easier"""
 import time
+import pytest
 
 from fastapi.testclient import TestClient
 
+from app import shepherd
+
+@pytest.fixture
+def client():
+    with TestClient(shepherd) as test_client:
+        yield test_client
 
 def wait_until(expr, interval=0.1, timeout=5):
     start = time.time()
@@ -19,7 +26,8 @@ def start_python(client: TestClient, python_file: str):
     assert response.status_code == 201
     time.sleep(1)  # TODO: https://github.com/systemetric/shepherd-2/issues/18
     response = client.post("/run/start")
-    wait_until(lambda: client.get("run/state").json() == "Running", timeout=5, interval=0.01)
+    # Can't just check for Running as the usercode could crash on entrance
+    wait_until(lambda: client.get("run/state").json() in ["Running", "Stopped"], timeout=5, interval=0.01)
 
 
 def run_python(client: TestClient, python_file: str):

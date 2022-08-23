@@ -1,7 +1,7 @@
 import logging
+
 from fastapi import APIRouter, HTTPException, UploadFile, File, Request
 from pydantic import BaseModel
-import logging
 
 from app.run import States
 from app.run import runner

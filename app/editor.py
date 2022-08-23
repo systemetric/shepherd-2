@@ -1,12 +1,10 @@
 """Functions used by endpoints for sheep"""
-import logging
 from app.config import config
 import os
 import json
 import re
 from pathlib import Path
 
-import logging
 
 def get_files() -> dict:
     """This read the editable files from the file system and returns them as json
@@ -57,6 +55,7 @@ def save_file(filename, body):
         with open(os.path.join(config.usr_src_path, filename), 'w') as f:
             f.write(body.decode('utf-8'))
     else:
+        pass
         logging.warning("A file was attempted to be saved with too many dots: "
                      f"{filename}")
 
@@ -69,5 +68,6 @@ def delete_file(filename):
     if dots == 1:
         os.unlink(os.path.join(config.usr_src_path, filename))
     else:
+        pass
         logging.warning("A file was attempted to be saved with too many dots: "
                      f"{filename}")

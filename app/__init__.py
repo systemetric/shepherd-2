@@ -1,6 +1,6 @@
 import pretty_errors
 
-from app.main import app
+from app.main import shepherd
 
 pretty_errors.configure(
     separator_character = '*',
