@@ -4,16 +4,12 @@ import os.path as path
 
 from pathlib import Path
 from pprint import pprint
-from typing import final
-from fastapi.testclient import TestClient
 
-from app import app
 from app.config import config
+from convenience import client
 
-client = TestClient(app)
 
-
-def test_files():
+def test_files(client):
     """The `files` endpoint returns the correct data about the files in
     usercode.
 
@@ -45,7 +41,7 @@ def test_files():
             assert(expected_file_contents == project["content"])
 
 
-def test_create_and_delete():
+def test_create_and_delete(client):
     """Check that the editor can save and receive files"""
     stimulus_name = "stimulus.py"
     stimulus_contents = "print('hello this is the stimulus program!')"
