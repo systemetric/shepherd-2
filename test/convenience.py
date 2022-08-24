@@ -1,15 +1,27 @@
 """A set of functions to make writing the tests a bit easier"""
 import time
 import pytest
+import os
 
 from fastapi.testclient import TestClient
 
 from app import shepherd
+from app.config import config
+import app.run
 
 @pytest.fixture
 def client():
-    with TestClient(shepherd) as test_client:
-        yield test_client
+    try:
+        with TestClient(shepherd) as test_client:
+            yield test_client
+    finally:
+        # Don't want to leave the usercode running
+        user_sp = app.run.runner.user_sp
+        if user_sp.poll() is None:
+            user_sp.kill()
+            user_sp.communicate()
+        if os.path.exists(config.usr_fifo_path) is True:
+            os.remove(config.usr_fifo_path)
 
 def wait_until(expr, interval=0.1, timeout=5):
     start = time.time()
