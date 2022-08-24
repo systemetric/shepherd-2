@@ -18,7 +18,7 @@ def test_inital_state(client):
 def test_start(client):
     """Code can be started"""
     client.post("/run/start")
-    # wait_until(lambda: client.get("/run/state").json() == "Running")
+    wait_until(lambda: client.get("/run/state").json() == "Running")
     response = client.get("/run/state")
     assert response.status_code == 200
 
@@ -46,4 +46,5 @@ def test_kill_user_code(client):
     time.sleep(1)
     log2 = client.get("/run/logs").json()
     logging.info("Got logs 2")
+
     assert (log1 == log2)

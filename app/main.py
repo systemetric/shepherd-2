@@ -8,7 +8,7 @@ from app.routers import runner_router, upload_router, files_router
 from app.run import runner
 from app.config import config
 from app.upload import increase_max_file_size
-from app.logging import configure_logging
+from app.logging import configure_logging, logger
 
 
 configure_logging()
@@ -40,6 +40,7 @@ def startup_event():
 @shepherd.on_event("shutdown")
 def shutdown_event():
     """Kill any running usercode"""
+    logger.info("Shutting down usercode forcing may leave usercode still running")
     runner.shutdown()
     if os.path.exists(config.usr_fifo_path) is True:
         os.remove(config.usr_fifo_path)

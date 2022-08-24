@@ -4,7 +4,7 @@ import click
 from copy import copy
 import http
 
-_logger = logging.getLogger()
+logger = logging.getLogger("app")
 
 
 class CustomFormatter(logging.Formatter):
@@ -97,18 +97,19 @@ def configure_logger(name: str, new_fomater, level):
     logger.setLevel(level)
 
 
-def configure_logging(level=logging.DEBUG, uvicorn_level=logging.INFO):
+def configure_logging(level=logging.DEBUG, third_party_level=logging.INFO):
     """Apply the logging formatters to the logging handlers
     Prevents uvicorn's handlers from double logging
     Sets logging level to `level`
     `uvicorn_level` allows the shepherd logs to come through by raising the uvicorn level
     """
-    configure_logger("uvicorn", UvicornFormatter, uvicorn_level)
-    configure_logger("uvicorn.access", UvicornAccessFormatter, uvicorn_level)
+    configure_logger("uvicorn", UvicornFormatter, third_party_level)
+    configure_logger("uvicorn.access", UvicornAccessFormatter, third_party_level)
+    configure_logger("multipart", logging.Formatter, third_party_level)
 
-    _logger.setLevel(level)
+    logger.setLevel(level)
     ch = logging.StreamHandler()
     ch.setLevel(level)
     ch.setFormatter(ShepherdFormatter())
-    _logger.addHandler(ch)
-    _logger.info("Logging configured")
+    logger.addHandler(ch)
+    logger.info("Logging configured")
