@@ -12,14 +12,17 @@ from app.run import runner, States
 
 
 def _is_python(file: fastapi.UploadFile) -> bool:
+    """Returns if `file` is likely a python file"""
     return file.content_type.startswith("text") or file.filename.endswith(".py")
 
 
 def _is_zip(file: fastapi.UploadFile) -> bool:
+    """Returns if `file` is likely a zip"""
     return (("zip" in file.content_type) or file.filename.endswith(".zip"))
 
 
 def _stage_python(dir: tempfile.TemporaryDirectory, in_file: fastapi.UploadFile):
+    """Place a python `in_file` in `dir`"""
     entry_point = Path(dir.name) / config.round_entry_point
     with open(entry_point, 'wb') as out_file:
         content = in_file.file.read()
@@ -74,6 +77,7 @@ def increase_max_file_size():
 
 
 def _stage_zip(dir: tempfile.TemporaryDirectory, in_file: fastapi.UploadFile):
+    """Try and extract a zip `in_file` to `dir` and check it is a valid zip"""
     _fix_bad_spools(in_file)
 
     try:

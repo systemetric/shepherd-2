@@ -13,6 +13,7 @@ from app.logging import configure_logging, logger
 
 configure_logging()
 
+
 shepherd = FastAPI(
     title="Shepherd",
     version="0.0.1",
@@ -32,7 +33,7 @@ shepherd.mount("/docs", StaticFiles(directory=config.docs_path, html=True), name
 @shepherd.on_event("startup")
 def startup_event():
     """Setup which is run before the rest of shepherd.
-
+    This works a round bugs in python. See doc string of `increase_max_file_size`
     """
     increase_max_file_size()
 

@@ -90,6 +90,10 @@ class UvicornAccessFormatter(CustomFormatter):
 
 
 def configure_logger(name: str, new_fomater, level):
+    """Applies `new_formater` to a logger specified by `name`
+    Ensure that this logger does not interfer with the root logger
+    Sets the loggers level to `level`
+    """
     logger = logging.getLogger(name)
     logger.propagate = False
     if len(logger.handlers) > 0:
