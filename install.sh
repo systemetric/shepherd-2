@@ -2,6 +2,10 @@
 
 echo "Running shepherd-2 installer"
 
+# Poetry needs these to run
+sudo apt-get install python3-distutils -y
+sudo apt-get install python3-apt -y
+
 if ! command -v poetry
 then
     echo "Poetry not found. Downloading and installing."
@@ -17,12 +21,12 @@ then
     fi
 fi
 
-# Can be used with --debug for hot reload
-touch run.sh
-echo "poetry run uvicorn app:app" > run.sh
 
 echo "installing python dependancies using poetry"
 if poetry install; then
+    # Can be used with --debug for hot reload
+    touch run.sh
+    echo "poetry run uvicorn app:shepherd --host 0.0.0.0" > run.sh
     echo "========================================"
     echo "INSTALL COMPLETE: Use 'sh run.sh' to run"
     echo "========================================"
@@ -34,9 +38,9 @@ echo "Poetry failed to install dependancies. Maybe there is no good python versi
 echo "You can manually do that here:"
 echo "  - Guide: https://realpython.com/installing-python/#how-to-build-python-from-source-code"
 echo "  - Offical python docs: https://docs.python.org/3/using/unix.html"
-echo "Alternatively you can use pyenv"
 echo "-------------------------------------------------------------------------------------"
 echo "SOLUTION: install.sh is able to compile python3.10 from source do you want to try?"
+echo "If you are on a pi this will take some hours"
 echo "-------------------------------------------------------------------------------------"
 echo " [y/n] "
 old_stty_cfg=$(stty -g)
@@ -65,7 +69,7 @@ sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
        libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
        libncurses5-dev libncursesw5-dev xz-utils tk-dev
 
-# Get latest python tarball
+# Get python3.10 tarball
 wget https://www.python.org/ftp/python/3.10.6/Python-3.10.6.tgz
 tar xvf Python-3.10.6.tgz
 cd Python-3.10.6
@@ -90,6 +94,9 @@ echo "Installing python dependancies using poetry"
 
 # Try to install the project dependencies again
 if poetry install; then
+    # Can be used with --debug for hot reload
+    touch run.sh
+    echo "poetry run uvicorn app:shepherd --host 0.0.0.0" > run.sh
     echo "========================================"
     echo "Make sure to add poetry to your path    "
     echo "PATH=$PATH:~/.local/bin"
@@ -97,5 +104,5 @@ if poetry install; then
     echo "========================================"
     exit
 else
-    echo "'poetry install' failed :("
+    echo "'poetry install' failed. There is likely some error log above."
 fi

@@ -2,19 +2,15 @@
 import errno
 import io
 import os
-from sre_parse import State
 import subprocess as sp
 import threading
 import sys
 import time
 from enum import Enum
 
-import logging
-
+from app.logging import logger
 from app.config import config
 
-
-_logger = logging.getLogger(__name__)
 
 class States(Enum):
     INIT = "Init"
@@ -44,11 +40,11 @@ class Runner:
         self.state_transition_lock = threading.Lock()
         self.new_state_event = threading.Event()
         self.new_state_event.set()
-        self.runner = threading.Thread(target=self._state_machine, daemon=True)
         self.watchdog = threading.Thread(
             target=self._run_watchdog, daemon=True)
-        self.runner.start()
+        self.runner = threading.Thread(target=self._state_machine, daemon=True)
         self.watchdog.start()
+        self.runner.start()
 
     def _enter_init_state(self) -> None:
         """Start the user process running.
@@ -69,7 +65,7 @@ class Runner:
             env=config.robot_env,
             preexec_fn=os.setsid
         )
-        logging.info(f"Started usercode PID:{os.getpgid(self.user_sp.pid)}")
+        logger.info(f"Started usercode PID:{os.getpgid(self.user_sp.pid)}")
 
     def _enter_running_state(self) -> None:
         """Send start signal to usercode"""
@@ -88,49 +84,32 @@ class Runner:
     def _enter_stopped_state(self) -> None:
         """Reap the users code"""
         if self.user_sp is None:
+            logger.debug("Re-entering STOPPED state. Usercode already stopped")
             return
         return_code = self.user_sp.poll()
         if return_code is None:
-            logging.info("Usercode is still running but we need to kill it")
-            # User code is still running so we need to kill it
-            try:
-                try:
-                    logging.info(f"Sending terminate signal to {self.user_sp.pid}")
-                    self.user_sp.terminate()
-                    logging.info("Sent terminate signal")
-                    self.user_sp.communicate(timeout=config.reap_grace_time)
-                    logging.info("Usercode terminated")
-                except sp.TimeoutExpired:
-                    logging.warning(
-                        f"Usercode could not be terminated within {config.reap_grace_time}s "
-                         "sending kill signal"
-                    )
-                    self.user_sp.kill()
-                    self.user_sp.communicate()
-            except OSError as e:
-                # Died between us seeing its alive and killing it
-                logging.warning(e)
-                if e.errno != errno.ESRCH:
-                    raise e
-            logging.info("usercode stopped")
-        elif self._current_state == States.STOPPED:
-            logging.debug("Re-entering STOPPED state. Usercode already stopped")
+            self.kill_usercode()
         else:
-            logging.debug(
+            logger.debug(
                 f"Usercode exited with {return_code} but was not killed by Shepherd")
         self.output_file.close()
+        self.user_sp = None
 
     def _state_machine(self) -> None:
         """The lifecycle of the usercode
         Don't need a try/finally as main.shutdown handles forcing into STOPPED state
         """
         state_timeout = None
+        self._next_state = States.INIT
+        self._current_state = None
+
         while True:
             self.new_state_event.wait(timeout=state_timeout)
             with self.state_transition_lock:
                 self.new_state_event.clear()
-                _logger.info(
+                logger.info(
                     f"Moving state from {self._current_state} to {self._next_state}")
+                self._current_state = self._next_state
                 match self._next_state:
                     case States.INIT:
                         self._enter_init_state()
@@ -144,7 +123,6 @@ class Runner:
                         self._enter_stopped_state()
                         self._next_state = States.STOPPED
                         state_timeout = None
-                self._current_state = self._next_state
 
     @property
     def state(self) -> States:
@@ -163,6 +141,31 @@ class Runner:
         while self.new_state_event.is_set():  # Only cleared in the state_machine thread
             time.sleep(0.05)                  # Don't use 100% CPU
 
+    def kill_usercode(self):
+        """Try and terminate usercode if unable kill it.
+        This function deliberately does not acquire any lock on the state machine
+        and so the effect of this will only be noticed by the watchdog
+        """
+        logger.info("Trying to kill usercode")
+        if (self.user_sp is not None) and (self.user_sp is not None):
+            try:
+                try:
+                    self.user_sp.terminate()
+                    self.user_sp.communicate(timeout=config.reap_grace_time)
+                    logger.info("subprocess thinks usercode is dead")
+                except sp.TimeoutExpired:
+                    logger.warning(
+                        f"Usercode could not be terminated within {config.reap_grace_time}s "
+                            "sending kill signal"
+                    )
+                    self.user_sp.kill()
+                    self.user_sp.communicate()
+            except OSError as e:
+                # Usercode was already dead
+                if e.errno != errno.ESRCH:
+                    raise e
+
+
     def get_output(self):
         """Open the output file in reading text mode, line buffered"""
         if not self.output_file.closed:
@@ -180,13 +183,16 @@ class Runner:
             if self._current_state == States.RUNNING:  # Don't acquire lock unless we might need it
                 with self.state_transition_lock:
                     if (self._current_state == States.RUNNING) and (self.user_sp.poll() is not None):
-                        logging.info("WATCHDOG: Detected usercode has exited")
+                        logger.info("WATCHDOG: Detected usercode has exited")
                         self._next_state = States.STOPPED
                         self.new_state_event.set()
 
+
+
     def shutdown(self):
-        self.state = States.STOPPED
-        self.output_file.close()
+        self.kill_usercode()
+        if self.output_file is not None:
+            self.output_file.close()
 
 
 runner = Runner()

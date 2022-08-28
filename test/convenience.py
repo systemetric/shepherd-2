@@ -1,27 +1,29 @@
 """A set of functions to make writing the tests a bit easier"""
 import time
 import pytest
-import os
+import psutil
 
 from fastapi.testclient import TestClient
 
 from app import shepherd
 from app.config import config
-import app.run
 
 @pytest.fixture
 def client():
-    try:
-        with TestClient(shepherd) as test_client:
-            yield test_client
-    finally:
-        # Don't want to leave the usercode running
-        user_sp = app.run.runner.user_sp
-        if user_sp.poll() is None:
-            user_sp.kill()
-            user_sp.communicate()
-        if os.path.exists(config.usr_fifo_path) is True:
-            os.remove(config.usr_fifo_path)
+    """A fixture for generating a requests like test client
+    Makes sure the usercode is dead
+    Set up and tear down can be placed before and after the with
+    """
+    with TestClient(shepherd) as test_client:
+        yield test_client
+
+    usercode_name = str(config.round_entry_path)
+    for p in psutil.process_iter():
+        if usercode_name in p.name() or usercode_name in ' '.join(p.cmdline()):
+            print("usercode still running killing it")
+            p.terminate()
+            p.wait()
+
 
 def wait_until(expr, interval=0.1, timeout=5):
     start = time.time()

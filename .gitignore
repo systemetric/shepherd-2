@@ -150,3 +150,4 @@ usercode/editable/*
 !usercode/editable/minimal_example.py
 !usercode/editable/snippests.py
 logs.txt
+run.sh
