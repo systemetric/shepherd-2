@@ -28,6 +28,7 @@ shepherd.include_router(files_router)
 
 shepherd.mount("/editor", StaticFiles(directory=config.editor_path, html=True), name="editor")
 shepherd.mount("/docs", StaticFiles(directory=config.docs_path, html=True), name="docs")
+shepherd.mount("/static", StaticFiles(directory=config.static_path, html=True), name="static")
 
 
 @shepherd.on_event("startup")

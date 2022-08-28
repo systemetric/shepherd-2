@@ -151,3 +151,4 @@ usercode/editable/*
 !usercode/editable/snippests.py
 logs.txt
 run.sh
+static/image.jpg

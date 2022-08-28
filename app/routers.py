@@ -1,3 +1,7 @@
+"""All of the dynamic routes that shepherd serves for the static routes see the
+mounts in main.py
+"""
+
 import logging
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Request
@@ -38,8 +42,11 @@ def get_state():
 
 
 @runner_router.get("/logs")
+@runner_router.get("/output")
 def output():
     return runner.get_output()
+
+
 
 # ==============================================================================
 # Upload router
@@ -79,3 +86,4 @@ async def save_file(filename: str, request: Request):
 @files_router.delete("/delete/{filename}")
 def delete_file(filename: str):
     app.editor.delete_file(filename)
+

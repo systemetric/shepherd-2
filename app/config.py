@@ -12,6 +12,7 @@ class Settings:
     round_entry_point = Path("main.py")
     round_entry_path: Path = (round_path / round_entry_point).absolute()
 
+    static_path: Path = Path("static/").absolute()
     editor_path: Path = Path("static/editor/").absolute()
     docs_path: Path = Path("static/docs/").absolute()
 
@@ -98,7 +99,7 @@ class Settings:
             start_img_path = Path('/home/pi/game_logo.jpg')
 
         if start_img_path.exists():
-            displayed_img_path = Path('shepherd/static/image.jpg')
+            displayed_img_path = Path('static/image.jpg')
             displayed_img_path.write_bytes(start_img_path.read_bytes())
 
 
