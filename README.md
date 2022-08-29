@@ -66,7 +66,7 @@ poetry run uvicorn app:app --reload
 
 To deploy run (chosen port and ip are optional):
 ```
-poetry run uvicorn app:app --host 0.0.0.0 --port 80
+poetry run uvicorn app:shepherd --host 0.0.0.0 --port 80
 ```
 
 ## Tests
