@@ -4,14 +4,12 @@ mounts in main.py
 
 import logging
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Request
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 
-from app.run import States
-from app.run import runner
 import app.editor
 import app.upload
-
+from app.run import States, runner
 
 # ==============================================================================
 # Runner router

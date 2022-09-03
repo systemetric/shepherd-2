@@ -1,12 +1,12 @@
 """Tests for the 'files' endpoint"""
 import os
 import os.path as path
-
 from pathlib import Path
 from pprint import pprint
 
-from app.config import config
 from convenience import client
+
+from app.config import config
 
 
 def test_files(client):

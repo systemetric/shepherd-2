@@ -2,13 +2,14 @@
 import contextlib
 import shutil
 import tempfile
-import fastapi
 import types
 import zipfile
 from pathlib import Path
 
+import fastapi
+
 from app.config import config
-from app.run import runner, States
+from app.run import States, runner
 
 
 def _is_python(file: fastapi.UploadFile) -> bool:
@@ -72,6 +73,7 @@ def increase_max_file_size():
     We need to do this because of the bug in python see in _fix_bad_spools
     """
     from starlette.datastructures import UploadFile as StarletteUploadFile
+
     # the original size * a big number which we will never hit
     StarletteUploadFile.spool_max_size = (1024 * 1024) * 99999999999999999
 

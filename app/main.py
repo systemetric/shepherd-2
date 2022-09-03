@@ -1,15 +1,14 @@
+import os
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-import uvicorn
-import os
-from pathlib import Path
 
-from app.routers import runner_router, upload_router, files_router
-from app.run import runner
 from app.config import config
-from app.upload import increase_max_file_size
 from app.logging import configure_logging, logger
-
+from app.routers import files_router, runner_router, upload_router
+from app.run import runner
+from app.upload import increase_max_file_size
 
 configure_logging()
 
@@ -44,8 +43,8 @@ def shutdown_event():
     """Kill any running usercode"""
     logger.info("Shutting down usercode forcing may leave usercode still running")
     runner.shutdown()
-    if os.path.exists(config.usr_fifo_path) is True:
-        os.remove(config.usr_fifo_path)
+    if os.path.exists(config.usr_in_path) is True:
+        os.remove(config.usr_in_path)
 
 
 @shepherd.get("/")

@@ -1,10 +1,8 @@
-import time
-import pytest
-
 import logging
+import time
 
-from convenience import start_python, wait_until, client
-
+import pytest
+from convenience import client, start_python, wait_until
 
 
 @pytest.mark.xfail(reason="Ready state not implemented, https://github.com/systemetric/shepherd-2/issues/18")

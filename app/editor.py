@@ -1,9 +1,10 @@
 """Functions used by endpoints for sheep"""
-from app.config import config
-import os
 import json
+import os
 import re
 from pathlib import Path
+
+from app.config import config
 
 
 def get_files() -> dict:

@@ -1,8 +1,7 @@
-import os
-
 import logging
-from pathlib import Path
+import os
 import tempfile
+from pathlib import Path
 
 
 class Settings:
@@ -29,22 +28,27 @@ class Settings:
     zone: bool = False
 
     # tempfile.mktemp is deprecated, but there's no possibility of a race --
-    usr_fifo_path = tempfile.mktemp(prefix="shepherd-fifo-")
+    # os.mkfifo raises if its path already exists so create a tmp directory for
+    # it
+    usr_in_path = tempfile.mktemp(prefix="shepherd-fifo-")
+    usr_out_path = tempfile.mktemp(prefix="shepherd-fifo-")
 
     def __init__(self):
-        self._on_brain()
+        self._detect_on_brain()
         self._init_usercode_folder()
         self._zone_from_USB()
 
-        # os.mkfifo raises if its path already exists.
-        os.mkfifo(self.usr_fifo_path)
+        os.mkfifo(self.usr_in_path)
+        os.mkfifo(self.usr_out_path)
 
-    def _on_brain(self):
+    def _detect_on_brain(self):
         """Detects if we are on a brain and alters the config accordingly
         Looks to see if the robot_usb path exists, if it does then we are
         probably on a configured brain rather than a dev PC
         """
-        if self.robot_usb_path.exists():
+        self.on_brain = self.robot_usb_path.exists():
+
+        if self.on_brain:
             logging.warning("Detected RobotUSB path assuming on brain")
             self.log_file_path = self.robot_usb_path / self.log_file_path
             config.robot_env["PYTHONPATH"] = config.robot_path

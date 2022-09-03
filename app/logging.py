@@ -1,8 +1,9 @@
 """Configure the logging of shepherd so it is readable and pretty"""
-import logging
-import click
-from copy import copy
 import http
+import logging
+from copy import copy
+
+import click
 
 logger = logging.getLogger("app")
 

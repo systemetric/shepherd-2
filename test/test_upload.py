@@ -1,10 +1,10 @@
 import shutil
-from pathlib import Path
 import tempfile
-from fastapi.testclient import TestClient
-import pytest
+from pathlib import Path
 
-from convenience import run_python, client
+import pytest
+from convenience import client, run_python
+from fastapi.testclient import TestClient
 
 
 def test_file_upload(client):

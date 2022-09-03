@@ -1,12 +1,13 @@
 """A set of functions to make writing the tests a bit easier"""
 import time
-import pytest
-import psutil
 
+import psutil
+import pytest
 from fastapi.testclient import TestClient
 
 from app import shepherd
 from app.config import config
+
 
 @pytest.fixture
 def client():

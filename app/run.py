@@ -3,13 +3,13 @@ import errno
 import io
 import os
 import subprocess as sp
-import threading
 import sys
+import threading
 import time
 from enum import Enum
 
-from app.logging import logger
 from app.config import config
+from app.logging import logger
 
 
 class States(Enum):
@@ -58,7 +58,7 @@ class Runner:
         self.output_file = open(config.log_file_path, "w+", 1)
         self.user_sp = sp.Popen(
             [sys.executable, "-u", config.round_entry_path,
-             "--startfifo", config.usr_fifo_path],
+             "--startfifo", config.usr_in_path, "--outfifo", config.usr_out_path],
             stdout=self.output_file,
             stderr=sp.STDOUT,
             universal_newlines=True,
@@ -70,15 +70,13 @@ class Runner:
     def _enter_running_state(self) -> None:
         """Send start signal to usercode"""
         start_settings = {
-                "mode": "comp",
                 "zone": int(config.zone),
-                "arena": "A",
             }
         # This is the old way of locking shepherd up until user code is ready
         # to run however we should have a ready state so that we can't get here
         # unless the usercode is ready to run
         # TODO: https://github.com/systemetric/shepherd-2/issues/13
-        # with os.open(config.usr_fifo_path, os.O_WRONLY ) as usr_fifo:
+        # with os.open(config.usr_in_path, os.O_WRONLY ) as usr_fifo:
         #     json.dump(start_settings, usr_fifo)
 
     def _enter_stopped_state(self) -> None:
@@ -186,8 +184,6 @@ class Runner:
                         logger.info("WATCHDOG: Detected usercode has exited")
                         self._next_state = States.STOPPED
                         self.new_state_event.set()
-
-
 
     def shutdown(self):
         self.kill_usercode()
