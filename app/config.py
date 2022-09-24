@@ -15,6 +15,8 @@ class Settings:
     static_path: Path = Path("static/").absolute()
     editor_path: Path = Path("static/editor/").absolute()
     docs_path: Path = Path("static/docs/").absolute()
+    static_image_file: Path = Path("static/image.jpg")
+    base_image_file: Path = Path("static/camera/image.jpg")
 
     round_len: float = 180.0  # seconds
     reap_grace_time: float = 5.0  # seconds
