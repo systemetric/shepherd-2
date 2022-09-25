@@ -38,9 +38,9 @@ class Settings:
     """
     camera_image_files: list[Path] = [
         Path("static/image.jpg"),
+        Path("static/temp.jpg"),
         arena_usb_path / "Corner.jpg",
         Path('usercode/editable/team_logo.jpg'),
-        Path('/home/pi/game_logo.jpg'),
         Path("static/game/teddy.jpg")
     ]
 
@@ -51,6 +51,7 @@ class Settings:
         self._on_brain()
         self._init_usercode_folder()
         self._zone_from_USB()
+        self._get_team_image()
 
         # os.mkfifo raises if its path already exists.
         os.mkfifo(self.usr_fifo_path)
@@ -88,17 +89,17 @@ class Settings:
                 self.zone = str(i)
                 return
 
-    def _get_team_specifics(self):
+    def _get_team_image(self):
         """Find information set on each brain about the team
 
         Only makes sense to run this if we are on a brain
         Teamname is set per brain before shipping and allows unique graphics
         for ID'ing teams in the arena.
         """
+        teamname_jpg = 'none'
         if self.teamname_file.exists():
-            teamname_jpg = self.teamname_file.read_text().replace('\n', '') + '.jpg'
-        else:
-            teamname_jpg = 'none'
-
+            teamname_jpg = self.teamname_file.read_text().strip() + '.jpg'
+        
+        self.camera_image_files[1] = Path(teamname_jpg) 
 
 config = Settings()
