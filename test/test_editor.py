@@ -55,3 +55,23 @@ def test_create_and_delete(client):
     finally:
         if stimulus_path.exists():
             os.remove(stimulus_path)
+
+def test_get_image(client):
+
+    """
+    Test Camera Image
+    """
+    cameraFile = config.camera_image_files[0]
+    if not cameraFile.exists():
+        cameraFile.write_text("Hello World!")
+
+    response = client.get("/files/image.jpg")
+    assert response.status_code == 200
+    
+
+    """
+    Test No Camera Image
+    """
+    os.remove(cameraFile)
+    response = client.get("/files/image.jpg")
+    assert response.status_code == 200

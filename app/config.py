@@ -15,8 +15,6 @@ class Settings:
     static_path: Path = Path("static/").absolute()
     editor_path: Path = Path("static/editor/").absolute()
     docs_path: Path = Path("static/docs/").absolute()
-    static_image_file: Path = Path("static/image.jpg")
-    base_image_file: Path = Path("static/camera/image.jpg")
 
     round_len: float = 180.0  # seconds
     reap_grace_time: float = 5.0  # seconds
@@ -29,6 +27,22 @@ class Settings:
     robot_usb_path: Path = Path("/media/RobotUSB")
     teamname_file: Path = Path("/home/pi/teamname.txt")
     zone: bool = False
+
+    """
+    Pick a start image in order of preference :
+        1) Camera Image (Deleted on Start)
+        2) Corner Image (USB)
+        3) Team Image (Uploaded)
+        4) Generic Corner Image (Arena USB Exists)
+        5) Teddy Image
+    """
+    camera_image_files: list[Path] = [
+        Path("static/image.jpg"),
+        arena_usb_path / "Corner.jpg",
+        Path('usercode/editable/team_logo.jpg'),
+        Path('/home/pi/game_logo.jpg'),
+        Path("static/game/teddy.jpg")
+    ]
 
     # tempfile.mktemp is deprecated, but there's no possibility of a race --
     usr_fifo_path = tempfile.mktemp(prefix="shepherd-fifo-")
@@ -80,29 +94,11 @@ class Settings:
         Only makes sense to run this if we are on a brain
         Teamname is set per brain before shipping and allows unique graphics
         for ID'ing teams in the arena.
-
-        Pick a start image in order of preference :
-            1) We have a team corner image on the USB
-            2) The team have uploaded their own image to the robot
-            3) We have a generic corner image on the USB
-            4) The game image
         """
         if self.teamname_file.exists():
             teamname_jpg = self.teamname_file.read_text().replace('\n', '') + '.jpg'
         else:
             teamname_jpg = 'none'
-
-        start_img_path = self.arena_usb_path / teamname_jpg
-        if not start_img_path.exists():
-            start_img_path = Path('usercode/editable/team_logo.jpg')
-        if not start_img_path.exists():
-            start_img_path = self.arena_usb_path / 'Corner.jpg'
-        if not start_img_path.exists():
-            start_img_path = Path('/home/pi/game_logo.jpg')
-
-        if start_img_path.exists():
-            displayed_img_path = Path('static/image.jpg')
-            displayed_img_path.write_bytes(start_img_path.read_bytes())
 
 
 config = Settings()

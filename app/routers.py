@@ -12,7 +12,7 @@ from app.run import States
 from app.run import runner
 import app.editor
 import app.upload
-import app.config
+from app.config import config
 
 # ==============================================================================
 # Runner router
@@ -91,7 +91,7 @@ def delete_file(filename: str):
 
 @files_router.get('/image.jpg')
 def get_image():
-    if app.config.config.static_image_file.is_file():
-        return FileResponse(app.config.config.static_image_file)
-    else:
-        return FileResponse(app.config.config.base_image_file)
+    for camera_file in config.camera_image_files:
+        if camera_file.exists():
+            return FileResponse(camera_file)
+    raise HTTPException(status_code=404, detail="Item not found")
