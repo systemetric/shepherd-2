@@ -61,7 +61,7 @@ poetry shell
 
 Start the server in development mode (hot reload):
 ```
-poetry run uvicorn app:app --reload
+poetry run uvicorn app:shepherd --reload
 ```
 
 To deploy run (chosen port and ip are optional):

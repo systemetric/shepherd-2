@@ -5,13 +5,14 @@ mounts in main.py
 import logging
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Request
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.run import States
 from app.run import runner
 import app.editor
 import app.upload
-
+from app.config import config
 
 # ==============================================================================
 # Runner router
@@ -87,3 +88,10 @@ async def save_file(filename: str, request: Request):
 def delete_file(filename: str):
     app.editor.delete_file(filename)
 
+
+@files_router.get('/image.jpg')
+def get_image():
+    for camera_file in config.camera_image_files:
+        if camera_file.exists():
+            return FileResponse(camera_file)
+    raise HTTPException(status_code=404, detail="Item not found")
