@@ -1,0 +1,3 @@
+[submodule "sheep"]
+	path = sheep
+	url = git@github.com:systemetric/sheep.git
